@@ -74,9 +74,12 @@ const currencies = new Map([
 
 /////////////////////////////////////////////////
 
-const displayMovements = function (movements) {
+const displayMovements = function (movements, sort = false) {
   containerMovements.innerHTML = "";
-  movements.forEach(function (movement, i) {
+
+  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
+
+  movs.forEach(function (movement, i) {
     const movementType = movement > 0 ? "deposit" : "withdrawal";
     const movementRow = `
   <div class="movements__row">
@@ -148,8 +151,6 @@ btnLogin.addEventListener("click", function (event) {
     (account) => account.userName === userName && account.pin === userPin
   );
 
-  console.log(account);
-
   if (account) {
     labelWelcome.textContent = "Welcome back " + account.owner.split(" ")[0];
     inputLoginPin.value = inputLoginUsername.value = "";
@@ -180,4 +181,48 @@ btnTransfer.addEventListener("click", function (event) {
   }
 
   inputTransferAmount.value = inputTransferTo.value = "";
+});
+
+btnClose.addEventListener("click", function (event) {
+  event.preventDefault();
+
+  const confirmUser = inputCloseUsername.value;
+  const confirmPin = Number(inputClosePin.value);
+
+  if (
+    currentAccount.userName === confirmUser &&
+    currentAccount.pin === confirmPin
+  ) {
+    const index = accounts.findIndex(
+      (account) => account.userName === currentAccount.userName
+    );
+    accounts.splice(index, 1);
+    containerApp.style.opacity = 0;
+    labelWelcome.textContent = "Log in to get started";
+  }
+
+  inputCloseUsername.value = inputClosePin.value = "";
+});
+
+btnLoan.addEventListener("click", function (event) {
+  event.preventDefault();
+
+  const amount = Number(inputLoanAmount.value);
+
+  if (
+    amount > 0 &&
+    currentAccount.movements.some((movement) => movement > 0.1 * amount)
+  ) {
+    currentAccount.movements.push(amount);
+    updateUI(currentAccount);
+  }
+
+  inputLoanAmount.value = "";
+});
+
+let sort = false;
+btnSort.addEventListener("click", function (event) {
+  event.preventDefault();
+  sort = !sort;
+  displayMovements(currentAccount.movements, sort);
 });
